@@ -22,8 +22,9 @@
 * GNU RISC-V Cross C Linker
   * Set linkerscript location:
     ```
-    "${workspace_loc:/${ProjName}/Controller/CH32V103/linker_script_ch32v103r8.ld}"
+    "${workspace_loc:/${ProjName}/Controller/CH32V103/linker_script_ch32v103x8.ld}"
     ```
+    (or `...x6.ld` for devices with small memory)
   * Select options:
     ```
     -nostartfiles
