@@ -2,14 +2,18 @@
 
 /******************************************************************************
  * _vector_base
- * Interrupt Vector Table
+ * Interrupt Vector Table (Vector Mode)
+ *
+ * In order to use this IVT, startup has to  configure mtvec[1:0] = 0b01.
  ******************************************************************************/
 .section  .isr_vector,"ax",@progbits
 .balign 4
 .globl  _vector_base
 _vector_base:
+  .option push
+  .option norvc
   /* Internal interrupts                                                      */
-  j     _start
+  j     _start                        /* Reset Handler                        */
   .word 0
   j     NMI_Handler                   /* NMI Handler                          */
   j     HardFault_Handler             /* Hard Fault Handler                   */
@@ -70,6 +74,7 @@ _vector_base:
   j     RTCAlarm_IRQHandler           /* RTC Alarm through EXTI Line          */
   j     USBWakeUp_IRQHandler          /* USB Wakeup from suspend              */
   j     USBHD_IRQHandler              /* USBHD                                */
+  .option pop
 
 /* Weak definitions of interrupt handlers in .text                            */
 .section  .text.vector_handler, "ax", @progbits
