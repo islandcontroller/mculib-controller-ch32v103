@@ -122,3 +122,61 @@ _vector_base:
 .weak RTCAlarm_IRQHandler
 .weak USBWakeUp_IRQHandler
 .weak USBHD_IRQHandler
+
+/* Default to generic handler if not implemented                              */
+.set NMI_Handler, Default_Handler
+.set HardFault_Handler, Default_Handler
+.set SysTick_Handler, Default_Handler
+.set SW_handler, Default_Handler
+.set WWDG_IRQHandler, Default_Handler
+.set PVD_IRQHandler, Default_Handler
+.set TAMPER_IRQHandler, Default_Handler
+.set RTC_IRQHandler, Default_Handler
+.set FLASH_IRQHandler, Default_Handler
+.set RCC_IRQHandler, Default_Handler
+.set EXTI0_IRQHandler, Default_Handler
+.set EXTI1_IRQHandler, Default_Handler
+.set EXTI2_IRQHandler, Default_Handler
+.set EXTI3_IRQHandler, Default_Handler
+.set EXTI4_IRQHandler, Default_Handler
+.set DMA1_Channel1_IRQHandler, Default_Handler
+.set DMA1_Channel2_IRQHandler, Default_Handler
+.set DMA1_Channel3_IRQHandler, Default_Handler
+.set DMA1_Channel4_IRQHandler, Default_Handler
+.set DMA1_Channel5_IRQHandler, Default_Handler
+.set DMA1_Channel6_IRQHandler, Default_Handler
+.set DMA1_Channel7_IRQHandler, Default_Handler
+.set ADC1_2_IRQHandler, Default_Handler
+.set EXTI9_5_IRQHandler, Default_Handler
+.set TIM1_BRK_IRQHandler, Default_Handler
+.set TIM1_UP_IRQHandler, Default_Handler
+.set TIM1_TRG_COM_IRQHandler, Default_Handler
+.set TIM1_CC_IRQHandler, Default_Handler
+.set TIM2_IRQHandler, Default_Handler
+.set TIM3_IRQHandler, Default_Handler
+.set TIM4_IRQHandler, Default_Handler
+.set I2C1_EV_IRQHandler, Default_Handler
+.set I2C1_ER_IRQHandler, Default_Handler
+.set I2C2_EV_IRQHandler, Default_Handler
+.set I2C2_ER_IRQHandler, Default_Handler
+.set SPI1_IRQHandler, Default_Handler
+.set SPI2_IRQHandler, Default_Handler
+.set USART1_IRQHandler, Default_Handler
+.set USART2_IRQHandler, Default_Handler
+.set USART3_IRQHandler, Default_Handler
+.set EXTI15_10_IRQHandler, Default_Handler
+.set RTCAlarm_IRQHandler, Default_Handler
+.set USBWakeUp_IRQHandler, Default_Handler
+.set USBHD_IRQHandler, Default_Handler
+
+
+/******************************************************************************
+ * Default_Handler
+ * Default interrupt handler for unimplemented interrupts
+ ******************************************************************************/
+.section  .text.Default_Handler
+.balign 4
+.globl  Default_Handler
+Default_Handler:
+  j     Default_Handler
+
