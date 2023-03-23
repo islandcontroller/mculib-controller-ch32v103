@@ -1,15 +1,30 @@
+/*!****************************************************************************
+ * @file
+ * linker_script_ch32v103x6.ld
+ *
+ * @brief
+ * Default linker script for CH32V103x6 application code.
+ *
+ * @date  02.03.2022
+ * @date  23.03.2023  Added simple heap/stack size sanity checks; Added boot-
+ *                    loader space
+ ******************************************************************************/
+
 /* Entry Point assignment                                                     */
 ENTRY( _start )
 
-/* Stack memory size definition                                               */
-__stack_size = 2048;
-PROVIDE( _stack_size = __stack_size );
+/* Reserved bootloader space at the start of FLASH                            */
+__boot_size = 0;
+
+/* Stack and heap memory size definitions                                     */
+__min_heap_size = 0;                /* Minimum required heap size             */
+__stack_size = 2048;                /* Reserved stack size                    */ 
 
 /* Memories definition                                                        */
 MEMORY
 {
-  FLASH (rx)  : ORIGIN = 0x00000000, LENGTH = 32K
-  RAM   (xrw) : ORIGIN = 0x20000000, LENGTH = 10K
+  FLASH   (rx)  : ORIGIN = 0x00000000 + __boot_size, LENGTH = 32K - __boot_size
+  RAM     (xrw) : ORIGIN = 0x20000000, LENGTH = 10K
 }
 
 /* Sections definition                                                        */
@@ -124,24 +139,40 @@ SECTIONS
 
     *(.sbss*)
     *(.gnu.linkonce.sb.*)
-    *(.bss*)
+    *(.bss .bss.*)
     *(.gnu.linkonce.b.*)
 
     *(COMMON*)
     
     . = ALIGN(4);
     _ebss = .;
-    PROVIDE( end = . );
-
-    __global_pointer$ = MIN(_sdata + 0x800, MAX(_sdata + 0x800, _ebss - 0x800));
+    PROVIDE( end = . );    
+    
   } >RAM
-
-  /* Stack at the end of RAM    	                        */
-  .stack ORIGIN(RAM) + LENGTH(RAM) - __stack_size :
+  
+  /* Calculate GP for maximum coverage                    */
+  __global_pointer$ = MIN(_sdata + 0x800, MAX(_sdata + 0x800, _ebss - 0x800));
+  
+  /* Stack/Heap collision detection                       */
+  .heap (NOLOAD) :
   {
-      . = ALIGN(4);
-      _sstack = .;
-      . = . + __stack_size;
-      _estack = .;
-  } >RAM 
+    . = ALIGN(4);
+    _sheap = .;
+    
+    /* Calculate available heap size                      */
+    __avail_heap_size = LENGTH(RAM) - __stack_size - (_sheap - ORIGIN(RAM));
+    
+    . = . + MAX(__min_heap_size, __avail_heap_size);
+    . = ALIGN(4);
+    _eheap = .;
+  } >RAM
+  
+  /* Stack at the end of RAM                              */
+  .stack (NOLOAD) :
+  {
+    . = ALIGN(4);
+    _sstack = .;
+    . = . + __stack_size;
+    _estack = .;
+  } >RAM
 }
