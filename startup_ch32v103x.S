@@ -1,4 +1,5 @@
 .include "Core/startup_riscv.s"
+.include "startup_debug.s"
 
 /******************************************************************************
  * _vector_base

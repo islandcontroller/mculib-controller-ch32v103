@@ -8,6 +8,8 @@
  * @date  02.03.2022
  * @date  23.03.2023  Added simple heap/stack size sanity checks; Added boot-
  *                    loader space
+ * @date  28.03.2023  Restructured memory definitions to allow .init section
+ *                    programming
  ******************************************************************************/
 
 /* Entry Point assignment                                                     */
@@ -23,14 +25,29 @@ __stack_size = 2048;                /* Reserved stack size                    */
 /* Memories definition                                                        */
 MEMORY
 {
-  FLASH   (rx)  : ORIGIN = 0x00000000 + __boot_size, LENGTH = 32K - __boot_size
+  FLASH   (rx)  : ORIGIN = 0x00000000, LENGTH = 32K
   RAM     (xrw) : ORIGIN = 0x20000000, LENGTH = 10K
 }
 
 /* Sections definition                                                        */
 SECTIONS
 {
-  /* Interrupt Vector Table at start of FLASH             */
+  /* Debugger Init at start of FLASH                      */
+  .init :
+  {
+    . = ALIGN(4);
+    _sinit = .;
+    
+    KEEP(*(SORT_NONE(.init)))
+    
+    . = ALIGN(4);
+    _einit = .;
+  } >FLASH
+
+  /* Skip bootloader area                                 */
+  . = . + __boot_size;
+  
+  /* Interrupt Vector Table at start of app memory        */
   .isr_vector :
   {
     . = ALIGN(4);
