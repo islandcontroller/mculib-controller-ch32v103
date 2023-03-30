@@ -1,23 +1,18 @@
 /*!****************************************************************************
  * @file
- * linker_script_ch32v103x6.ld
+ * linker_script_ch32v103x6_nodebug.ld
  *
  * @brief
  * Default linker script for CH32V103x6 application code.
  *
- * @date  02.03.2022
- * @date  23.03.2023  Added simple heap/stack size sanity checks; Added boot-
- *                    loader space
- * @date  28.03.2023  Restructured memory definitions to allow .init section
- *                    programming
- * @date  30.03.2023  Reworked offset handling for debugger IVT and bootloader
+ * @note
+ * THIS LINKER CONFIGURATION DOES NOT PROVISION A DEBUGGER IVT
+ *
+ * @date  30.03.2023
  ******************************************************************************/
 
 /* Entry Point assignment                                                     */
 ENTRY( _start )
-
-/* Reserved debugger IVT space before bootloader at the start of FLASH        */
-__dbg_size = 64;
 
 /* Reserved bootloader space at the start of FLASH                            */
 __boot_size = 0;
@@ -29,10 +24,8 @@ __stack_size = 2048;                /* Reserved stack size                    */
 /* Memories definition                                                        */
 MEMORY
 {
-  FLASH_DBG (rx)  : ORIGIN = 0x00000000,
-                    LENGTH = __dbg_size
-  FLASH     (rx)  : ORIGIN = 0x00000000 + MAX(__dbg_size, __boot_size), 
-                    LENGTH = 32K - MAX(__dbg_size, __boot_size)
+  FLASH     (rx)  : ORIGIN = 0x00000000 + __boot_size, 
+                    LENGTH = 32K - __boot_size
   RAM       (xrw) : ORIGIN = 0x20000000, 
                     LENGTH = 10K
 }

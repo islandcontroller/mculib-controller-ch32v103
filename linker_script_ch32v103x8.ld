@@ -10,10 +10,14 @@
  *                    loader space
  * @date  28.03.2023  Restructured memory definitions to allow .init section
  *                    programming
+ * @date  30.03.2023  Reworked offset handling for debugger IVT and bootloader
  ******************************************************************************/
 
 /* Entry Point assignment                                                     */
 ENTRY( _start )
+
+/* Reserved debugger IVT space before bootloader at the start of FLASH        */
+__dbg_size = 64;
 
 /* Reserved bootloader space at the start of FLASH                            */
 __boot_size = 0;
@@ -25,8 +29,12 @@ __stack_size = 2048;                /* Reserved stack size                    */
 /* Memories definition                                                        */
 MEMORY
 {
-  FLASH   (rx)  : ORIGIN = 0x00000000, LENGTH = 64K
-  RAM     (xrw) : ORIGIN = 0x20000000, LENGTH = 20K
+  FLASH_DBG (rx)  : ORIGIN = 0x00000000,
+                    LENGTH = __dbg_size
+  FLASH     (rx)  : ORIGIN = 0x00000000 + MAX(__dbg_size, __boot_size), 
+                    LENGTH = 64K - MAX(__dbg_size, __boot_size)
+  RAM       (xrw) : ORIGIN = 0x20000000, 
+                    LENGTH = 20K
 }
 
 /* Sections definition                                                        */
@@ -42,10 +50,7 @@ SECTIONS
     
     . = ALIGN(4);
     _einit = .;
-  } >FLASH
-
-  /* Skip bootloader area                                 */
-  . = . + __boot_size;
+  } >FLASH_DBG
 
   /* Interrupt Vector Table at start of app memory        */
   .isr_vector :
@@ -107,7 +112,7 @@ SECTIONS
     KEEP (*(EXCLUDE_FILE (*crtend.o *crtend?.o ) .ctors))
     KEEP (*(SORT(.ctors.*)))
     KEEP (*(.ctors))
-  } >FLASH AT>FLASH 
+  } >FLASH
   .dtors :
   {
     KEEP (*crtbegin.o(.dtors))
@@ -115,7 +120,7 @@ SECTIONS
     KEEP (*(EXCLUDE_FILE (*crtend.o *crtend?.o ) .dtors))
     KEEP (*(SORT(.dtors.*)))
     KEEP (*(.dtors))
-  } >FLASH AT>FLASH
+  } >FLASH
 
   /* Initialised data section                             */
   .data :
