@@ -9,6 +9,7 @@
  * THIS LINKER CONFIGURATION DOES NOT PROVISION A DEBUGGER IVT
  *
  * @date  30.03.2023
+ * @date  02.10.2023  Added unused glue_7/glue_7t selectors
  ******************************************************************************/
 
 /* Entry Point assignment                                                     */
@@ -65,8 +66,6 @@ SECTIONS
     *(.text.*)
     *(.rodata)
     *(.rodata*)
-    *(.glue_7)
-    *(.glue_7t)
     *(.gnu.linkonce.t.*)
 
     . = ALIGN(4);

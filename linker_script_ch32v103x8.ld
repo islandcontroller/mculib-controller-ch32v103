@@ -11,6 +11,7 @@
  * @date  28.03.2023  Restructured memory definitions to allow .init section
  *                    programming
  * @date  30.03.2023  Reworked offset handling for debugger IVT and bootloader
+ * @date  02.10.2023  Added unused glue_7/glue_7t selectors
  ******************************************************************************/
 
 /* Entry Point assignment                                                     */
@@ -72,8 +73,6 @@ SECTIONS
     *(.text.*)
     *(.rodata)
     *(.rodata*)
-    *(.glue_7)
-    *(.glue_7t)
     *(.gnu.linkonce.t.*)
 
     . = ALIGN(4);
