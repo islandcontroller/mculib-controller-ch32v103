@@ -5,6 +5,28 @@
  * @brief
  * Default linker script for CH32V103x6 application code.
  *
+ * The script provides options for customisation through the linker command
+ * line. The following symbols need to be passed using the "defsym" option
+ * **before** including the linker script (i.e. before "-T ..."):
+ * 
+ * - __boot_size: Bootloader space, reserved at the start of FLASH, in bytes.
+ * This value must be an integer multiple of 64 (= IVT size), or 0. The default
+ * value is 0.
+ *
+ * - __min_heap_size: Minimum size to be reserved for heap (dynamically allo-
+ * cateable space), in bytes. This value must be an integer multiple of 4, or 
+ * 0. The default value is 0.
+ *
+ * - __stack_size: Space to be reserved for the stack, in bytes. This value
+ * must be an integer multiple of 4. The default value is 2K.
+ * 
+ * Example:
+ *                    add_link_options(
+ *                      -Wl,--defsym=__boot_size=1024
+ *                      -T ${LINKER_FILE}
+ *                      ...
+ *                    )
+ *
  * @date  02.03.2022
  * @date  23.03.2023  Added simple heap/stack size sanity checks; Added boot-
  *                    loader space
@@ -12,6 +34,7 @@
  *                    programming
  * @date  30.03.2023  Reworked offset handling for debugger IVT and bootloader
  * @date  02.10.2023  Added unused glue_7/glue_7t selectors
+ * @date  20.02.2025  Added heap/stack space reservation; configuration options
  ******************************************************************************/
 
 /* Entry Point assignment                                                     */
@@ -21,11 +44,16 @@ ENTRY( _start )
 __dbg_size = 64;
 
 /* Reserved bootloader space at the start of FLASH                            */
-__boot_size = 0;
+__boot_size = DEFINED(__boot_size) ? __boot_size : 0;
+ASSERT((ALIGN(__boot_size, 64)-__boot_size) == 0, "__boot_size must be multiple of 64")
 
-/* Stack and heap memory size definitions                                     */
-__min_heap_size = 0;                /* Minimum required heap size             */
-__stack_size = 2048;                /* Reserved stack size                    */ 
+/* Reserved space for heap                                                    */
+__min_heap_size = DEFINED(__min_heap_size) ? __min_heap_size : 0;
+ASSERT((ALIGN(__min_heap_size, 4)-__min_heap_size) == 0, "__min_heap_size must be multiple of 4")
+
+/* Reserved space for stack                                                   */
+__stack_size = DEFINED(__stack_size) ? __stack_size : 2K;
+ASSERT((ALIGN(__stack_size, 4)-__stack_size) == 0, "__stack_size must be multiple of 4")
 
 /* Memories definition                                                        */
 MEMORY
@@ -174,26 +202,13 @@ SECTIONS
   /* Calculate GP for maximum coverage                    */
   __global_pointer$ = MIN(_sdata + 0x800, MAX(_sdata + 0x800, _ebss - 0x800));
   
-  /* Stack/Heap collision detection                       */
-  .heap (NOLOAD) :
-  {
-    . = ALIGN(4);
-    _sheap = .;
-    
-    /* Calculate available heap size                      */
-    __avail_heap_size = LENGTH(RAM) - __stack_size - (_sheap - ORIGIN(RAM));
-    
-    . = . + MAX(__min_heap_size, __avail_heap_size);
-    . = ALIGN(4);
-    _eheap = .;
-  } >RAM
-  
-  /* Stack at the end of RAM                              */
-  .stack (NOLOAD) :
-  {
-    . = ALIGN(4);
-    _sstack = .;
-    . = . + __stack_size;
-    _estack = .;
-  } >RAM
+  /* Stack allocation at end of RAM                       */
+  PROVIDE(_estack = ORIGIN(RAM) + LENGTH(RAM));
+  PROVIDE(_sstack = _estack - __stack_size);
+  ASSERT(_sstack > _ebss, "Insufficient space for stack allocation")
+
+  /* Heap allocation between bss and stack                */
+  PROVIDE(_sheap = _ebss);
+  PROVIDE(_eheap = _sstack);
+  ASSERT((_eheap - _sheap) >= __min_heap_size, "Insufficient space for heap allocation")
 }
